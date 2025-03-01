@@ -1,0 +1,55 @@
+# Importing necessary modules
+from colors import Colors  # Importing a Colors class to handle color definitions
+import pygame  # Importing the pygame library for game development
+from position import Position  # Importing a Position class to manage cell positions
+
+class Block:
+    def __init__(self, id):
+        self.id = id  # Unique identifier for the block
+        self.cells = {}  # Dictionary to store cell positions for different rotation states
+        self.cell_size = 30  # Size of each cell in pixels
+        self.row_offset = 0  # Vertical offset for the block's position
+        self.column_offset = 0  # Horizontal offset for the block's position
+        self.rotation_state = 0  # Current rotation state of the block
+        self.colors = Colors.get_cell_colors()  # Retrieve colors for the block's cells
+
+    def move(self, rows, columns):
+        # Move the block by a specified number of rows and columns
+        self.row_offset += rows
+        self.column_offset += columns
+
+    def get_cell_positions(self):
+        # Get the positions of the cells based on the current rotation state and offsets
+        tiles = self.cells[self.rotation_state]  # Get the tile positions for the current rotation
+        moved_tiles = []  # List to store the new positions after applying offsets
+        for position in tiles:
+            # Create a new Position object with the updated row and column
+            position = Position(position.row + self.row_offset, position.column + self.column_offset)
+            moved_tiles.append(position)  # Add the new position to the list
+        return moved_tiles  # Return the updated positions
+
+    def rotate(self):
+        # Rotate the block to the next state
+        self.rotation_state += 1  # Increment the rotation state
+        if self.rotation_state == len(self.cells):
+            # If the rotation state exceeds the available states, wrap around to 0
+            self.rotation_state = 0
+
+    def undo_rotation(self):
+        # Rotate the block back to the previous state
+        self.rotation_state -= 1  # Decrement the rotation state
+        if self.rotation_state == -1:
+            # If the rotation state goes below 0, wrap around to the last state
+            self.rotation_state = len(self.cells) - 1
+
+    def draw(self, screen, offset_x, offset_y):
+        # Draw the block on the provided screen at the specified offsets
+        tiles = self.get_cell_positions()  # Get the current positions of the cells
+        for tile in tiles:
+            # Create a rectangle for each cell based on its position and size
+            tile_rect = pygame.Rect(offset_x + tile.column * self.cell_size,
+                                     offset_y + tile.row * self.cell_size,
+                                     self.cell_size - 1,
+                                     self.cell_size - 1)
+            # Draw the rectangle on the screen using the block's color
+            pygame.draw.rect(screen, self.colors[self.id], tile_rect)
